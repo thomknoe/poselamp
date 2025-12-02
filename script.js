@@ -47,6 +47,27 @@ document.getElementById("pingDevice").onclick = () => {
   safePublish("esp32/ping", "PING");
 };
 
+document.querySelectorAll(".grad-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const mode = btn.dataset.mode;    // "MODE_1" or "MODE_5"
+    const index = btn.dataset.index;  // "0".."7"
+
+    // 1) Tell ESP32 to update preset mapping
+    const payload = `${mode}:${index}`;
+    safePublish("esp32/gradient_cfg", payload);
+
+    // 2) Immediately re-apply that mode so LEDs change now
+    safePublish("esp32/mode", mode);
+
+    // UI highlight
+    document
+      .querySelectorAll(`.grad-btn[data-mode="${mode}"]`)
+      .forEach((b) => b.classList.remove("selected"));
+    btn.classList.add("selected");
+  });
+});
+
+
 //----------------------------------------------------------------
 // ML5 BODYPOSE SETUP
 //----------------------------------------------------------------
