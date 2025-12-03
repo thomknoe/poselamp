@@ -3,9 +3,8 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>Posture Lantern — Minimal UI</title>
+    <title>Posture Lantern</title>
 
-    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
 
     <!-- p5.js + ml5.js -->
@@ -18,40 +17,315 @@
 
 <body>
 
-    <h1>Posture Lantern</h1>
+    <!-- ========== STEP 1: CONNECT DEVICE ========== -->
+    <div id="screen1" class="screen active-screen">
+        <div class="screen-card">
+            <h2>Step 1 — Connect Device</h2>
+            <p class="description fullwidth">
+                Establish a connection with your Posture Lantern using MQTT. When the device is detected and online, you
+                may proceed to calibration.
+            </p>
 
-    <div class="container">
-
-        <!-- CONNECTION PANEL -->
-        <div class="panel">
-            <h2>Connection</h2>
-            <div>
-                <span class="status-light" id="mqttLight" style="background:#c33;"></span>
-                <b>MQTT:</b> <span id="mqttStatus">Disconnected</span>
+            <div class="status-block">
+                <div>
+                    <span id="mqttDot" class="status-dot disconnected"></span>
+                    <b>MQTT Status:</b> <span id="mqttStatus">Disconnected</span>
+                </div>
+                <div class="mt8">
+                    <b>Device:</b> <span id="deviceIP">None</span>
+                </div>
             </div>
-            <br>
-            <div><b>Device:</b> <span id="deviceIP">None</span></div>
 
-            <button id="connectMQTT">Connect</button>
-            <button id="pingDevice">Ping Device</button>
+            <div class="button-group">
+                <button id="connectMQTT">Connect to MQTT</button>
+                <button id="pingDevice">Ping Device</button>
+            </div>
+
+            <div class="nav-row">
+                <button id="toStep2" class="next-btn" disabled>Continue</button>
+            </div>
         </div>
-
-        <!-- POSTURE PANEL -->
-        <div class="panel">
-            <h2>Posture</h2>
-            <div id="postureBox" class="good">Waiting for data...</div>
-
-            <br>
-            <div><b>Nose Y:</b> <span id="noseVal">—</span></div>
-            <div><b>Shoulder Y:</b> <span id="shoulderVal">—</span></div>
-            <div><b>Delta:</b> <span id="deltaVal">—</span></div>
-        </div>
-
     </div>
 
-    <div id="videoContainer"></div>
+    <!-- ========== STEP 2: CALIBRATION ========== -->
+    <div id="screen2" class="screen">
+        <div class="screen-card">
+            <h2>Step 2 — Calibrate Posture</h2>
+            <p class="description fullwidth">
+                Position yourself naturally within the camera frame. Establish your personal baseline measurements for
+                both upright and slouched postures to enable accurate detection.
+            </p>
 
-    <!-- MAIN JS -->
+            <div class="cal-layout">
+                <div class="cal-video-wrap">
+                    <div id="videoContainer" class="video-wrap"></div>
+                </div>
+
+                <div class="cal-panel">
+                    <div class="live-readout">
+                        <div><b>Nose Y:</b> <span id="noseVal">—</span></div>
+                        <div><b>Shoulder Y:</b> <span id="shoulderVal">—</span></div>
+                        <div><b>Delta:</b> <span id="deltaVal">—</span></div>
+                    </div>
+
+                    <div class="button-group column">
+                        <button id="setUpright">Set Upright Baseline</button>
+                        <button id="setSlouch">Set Slouch Baseline</button>
+                    </div>
+
+                    <div class="baseline">
+                        <div><b>Upright delta:</b> <span id="uprightDeltaVal">—</span></div>
+                        <div><b>Slouch delta:</b> <span id="slouchDeltaVal">—</span></div>
+                    </div>
+
+                    <p id="calibStatus" class="calib-status">Position yourself within the camera frame to begin
+                        calibration.</p>
+                </div>
+            </div>
+
+            <div class="nav-row">
+                <button id="backTo1" class="back-btn">Back</button>
+                <button id="toStep3" class="next-btn" disabled>Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== STEP 3: MODES & COLORS ========== -->
+    <div id="screen3" class="screen">
+        <div class="screen-card">
+            <h2>Step 3 — Configure Settings</h2>
+            <p class="description fullwidth">
+                Customize your Posture Lantern by selecting brightness levels and color gradients for both upright and
+                slouched postures.
+            </p>
+
+            <h3 class="section-title">Brightness Level</h3>
+            <p class="section-description">
+                Adjust the overall brightness output of your Posture Lantern. Select from three preset levels optimized
+                for different environments.
+            </p>
+
+            <div class="pill-row">
+                <button class="pill modeBtn" data-mode="BRIGHT">Bright</button>
+                <button class="pill modeBtn" data-mode="NORMAL">Normal</button>
+                <button class="pill modeBtn" data-mode="DIMMED">Dimmed</button>
+            </div>
+
+            <h3 class="section-title">Upright Posture Colors</h3>
+            <p class="section-description">
+                Select a color gradient that displays when maintaining proper upright posture. These colors provide
+                positive visual reinforcement.
+            </p>
+
+            <div class="gradient-grid" id="uprightGradients">
+                <div class="gradient-option" data-posture="UPRIGHT" data-index="0">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(to right, rgb(80, 160, 100), rgb(140, 220, 160));"></div>
+                    <div class="gradient-title">Sage</div>
+                </div>
+                <div class="gradient-option" data-posture="UPRIGHT" data-index="1">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(to right, rgb(60, 160, 200), rgb(40, 200, 240));"></div>
+                    <div class="gradient-title">Sky</div>
+                </div>
+                <div class="gradient-option" data-posture="UPRIGHT" data-index="2">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(to right, rgb(160, 140, 200), rgb(200, 160, 220));"></div>
+                    <div class="gradient-title">Lavender</div>
+                </div>
+                <div class="gradient-option" data-posture="UPRIGHT" data-index="3">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(to right, rgb(180, 200, 220), rgb(160, 190, 210));"></div>
+                    <div class="gradient-title">Pearl</div>
+                </div>
+                <div class="gradient-option" data-posture="UPRIGHT" data-index="4">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(to right, rgb(100, 200, 160), rgb(140, 240, 190));"></div>
+                    <div class="gradient-title">Mint</div>
+                </div>
+                <div class="gradient-option" data-posture="UPRIGHT" data-index="5">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(to right, rgb(240, 180, 140), rgb(250, 210, 180));"></div>
+                    <div class="gradient-title">Dawn</div>
+                </div>
+            </div>
+
+            <h3 class="section-title">Slouched Posture Colors</h3>
+            <p class="section-description">
+                Select a color gradient that displays when slouching is detected. These warmer tones serve as gentle
+                visual reminders to adjust your posture.
+            </p>
+
+            <div class="gradient-grid" id="slouchGradients">
+                <div class="gradient-option" data-posture="SLOUCH" data-index="0">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(to right, rgb(255, 100, 40), rgb(255, 50, 70));"></div>
+                    <div class="gradient-title">Ember</div>
+                </div>
+                <div class="gradient-option" data-posture="SLOUCH" data-index="1">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(to right, rgb(255, 120, 80), rgb(255, 70, 120));"></div>
+                    <div class="gradient-title">Sunset</div>
+                </div>
+                <div class="gradient-option" data-posture="SLOUCH" data-index="2">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(to right, rgb(255, 150, 30), rgb(255, 110, 50));"></div>
+                    <div class="gradient-title">Amber</div>
+                </div>
+                <div class="gradient-option" data-posture="SLOUCH" data-index="3">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(to right, rgb(255, 90, 110), rgb(255, 120, 150));"></div>
+                    <div class="gradient-title">Rose</div>
+                </div>
+                <div class="gradient-option" data-posture="SLOUCH" data-index="4">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(to right, rgb(255, 100, 70), rgb(255, 150, 120));"></div>
+                    <div class="gradient-title">Coral</div>
+                </div>
+                <div class="gradient-option" data-posture="SLOUCH" data-index="5">
+                    <div class="gradient-preview"
+                        style="background: linear-gradient(to right, rgb(255, 70, 50), rgb(255, 130, 70));"></div>
+                    <div class="gradient-title">Flame</div>
+                </div>
+            </div>
+
+            <div class="nav-row">
+                <button id="backTo2" class="back-btn">Back</button>
+                <button id="finishSetup" class="next-btn" disabled>Continue</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========== DASHBOARD ========== -->
+    <div id="dashboard" class="screen">
+        <div class="screen-card">
+            <h2>Dashboard</h2>
+            <p class="description fullwidth">
+                Real-time posture monitoring is active. Your Posture Lantern will provide visual feedback based on your
+                current posture state.
+            </p>
+
+            <div class="dash-layout">
+
+                <!-- Left Column: Video feed -->
+                <div class="dash-video-wrap">
+                    <div id="dashboardVideoContainer" class="video-wrap small-video"></div>
+                </div>
+
+                <!-- Right Column: Control + Status -->
+                <div class="dash-side">
+
+                    <div class="panel dashboard-panel">
+                        <h3>Session Control</h3>
+                        <button id="sessionToggle" class="toggle-btn off">Session Off</button>
+                        <div class="button-row">
+                            <button id="mobilityBtn">Mobility Drill</button>
+                            <button id="partyBtn">Party Mode</button>
+                        </div>
+                    </div>
+
+                    <div class="panel dashboard-panel">
+                        <h3>Posture Status</h3>
+                        <div id="postureBox" class="status-tile good">Initializing posture detection...</div>
+                        <button id="selectColorsBtn" class="secondary-btn" style="margin-top: 12px;">Select
+                            Colors</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Trendline -->
+            <div class="panel dashboard-panel trend-panel">
+                <h3>Posture Trendline</h3>
+                <p class="section-description" style="margin-bottom: 12px;">Real-time visualization of your posture
+                    delta measurements throughout the session.</p>
+                <canvas id="trendCanvas" width="900" height="140"></canvas>
+            </div>
+
+            <!-- Session Stats -->
+            <div class="session-stats">
+                <div class="stat-item">
+                    <div class="stat-label">Session Duration</div>
+                    <div class="stat-value" id="sessionDuration">00:00</div>
+                </div>
+                <div class="stat-item stat-item-center">
+                    <div class="stat-label">Colors</div>
+                    <div class="footer-swatches">
+                        <div class="footer-swatch" id="footerUprightSwatch"
+                            style="background: linear-gradient(to right, rgb(80, 160, 100), rgb(140, 220, 160));"
+                            title="Upright: Sage"></div>
+                        <div class="footer-swatch" id="footerSlouchSwatch"
+                            style="background: linear-gradient(to right, rgb(255, 100, 40), rgb(255, 50, 70));"
+                            title="Slouch: Ember"></div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Posture Score</div>
+                    <div class="stat-value score-good" id="postureScore">100</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Color Selection Modal -->
+    <div id="colorModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Select Color Gradients</h3>
+                <button class="modal-close" id="closeModal">×</button>
+            </div>
+            <div class="gradient-selector-compact">
+                <div class="gradient-selector-group">
+                    <label class="gradient-label">Upright</label>
+                    <div class="gradient-mini-grid" id="modalUprightGradients">
+                        <div class="gradient-mini" data-posture="UPRIGHT" data-index="0"
+                            style="background: linear-gradient(to right, rgb(80, 160, 100), rgb(140, 220, 160));"
+                            title="Sage"></div>
+                        <div class="gradient-mini" data-posture="UPRIGHT" data-index="1"
+                            style="background: linear-gradient(to right, rgb(60, 160, 200), rgb(40, 200, 240));"
+                            title="Sky"></div>
+                        <div class="gradient-mini" data-posture="UPRIGHT" data-index="2"
+                            style="background: linear-gradient(to right, rgb(160, 140, 200), rgb(200, 160, 220));"
+                            title="Lavender"></div>
+                        <div class="gradient-mini" data-posture="UPRIGHT" data-index="3"
+                            style="background: linear-gradient(to right, rgb(180, 200, 220), rgb(160, 190, 210));"
+                            title="Pearl"></div>
+                        <div class="gradient-mini" data-posture="UPRIGHT" data-index="4"
+                            style="background: linear-gradient(to right, rgb(100, 200, 160), rgb(140, 240, 190));"
+                            title="Mint"></div>
+                        <div class="gradient-mini" data-posture="UPRIGHT" data-index="5"
+                            style="background: linear-gradient(to right, rgb(240, 180, 140), rgb(250, 210, 180));"
+                            title="Dawn"></div>
+                    </div>
+                </div>
+                <div class="gradient-selector-group">
+                    <label class="gradient-label">Slouch</label>
+                    <div class="gradient-mini-grid" id="modalSlouchGradients">
+                        <div class="gradient-mini" data-posture="SLOUCH" data-index="0"
+                            style="background: linear-gradient(to right, rgb(255, 100, 40), rgb(255, 50, 70));"
+                            title="Ember"></div>
+                        <div class="gradient-mini" data-posture="SLOUCH" data-index="1"
+                            style="background: linear-gradient(to right, rgb(255, 120, 80), rgb(255, 70, 120));"
+                            title="Sunset"></div>
+                        <div class="gradient-mini" data-posture="SLOUCH" data-index="2"
+                            style="background: linear-gradient(to right, rgb(255, 150, 30), rgb(255, 110, 50));"
+                            title="Amber"></div>
+                        <div class="gradient-mini" data-posture="SLOUCH" data-index="3"
+                            style="background: linear-gradient(to right, rgb(255, 90, 110), rgb(255, 120, 150));"
+                            title="Rose"></div>
+                        <div class="gradient-mini" data-posture="SLOUCH" data-index="4"
+                            style="background: linear-gradient(to right, rgb(255, 100, 70), rgb(255, 150, 120));"
+                            title="Coral"></div>
+                        <div class="gradient-mini" data-posture="SLOUCH" data-index="5"
+                            style="background: linear-gradient(to right, rgb(255, 70, 50), rgb(255, 130, 70));"
+                            title="Flame"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 
 </body>
